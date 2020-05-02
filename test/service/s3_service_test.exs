@@ -93,6 +93,14 @@ defmodule ActivestorageExTest.S3ServiceTest do
       refute S3Service.exist?(@test_key)
     end
 
+    test "No error is thrown if a file doesn't exist" do
+      key = "super_fake_test_key"
+
+      refute S3Service.exist?(key)
+
+      :ok = S3Service.delete(key)
+    end
+
     test "An image with a complex path is sucessfully deleted from s3" do
       key = "variants/new_key"
       upload_test_image(key)
