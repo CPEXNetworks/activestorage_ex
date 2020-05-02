@@ -21,20 +21,14 @@ defmodule ActivestorageEx.S3Service do
     {:ok, filepath}
   end
 
-  def upload(image, key) do
-    saved_image = image |> Mogrify.save()
+  def upload(%Mogrify.Image{} = image, key) do
+    do_upload(image, key)
+  end
 
-    with {:ok, image_io} <- File.read(saved_image.path),
-         {:ok, _} <- put_object_for(key, image_io) do
-      remove_temp_file(saved_image.path)
-
-      :ok
-    else
-      {:error, err} ->
-        remove_temp_file(saved_image.path)
-
-        {:error, err}
-    end
+  def upload(image_path, key) when is_binary(image_path) do
+    image_path
+    |> Mogrify.open()
+    |> do_upload(key)
   end
 
   def delete(key) do
@@ -71,6 +65,22 @@ defmodule ActivestorageEx.S3Service do
     case object_for(key) do
       {:ok, _} -> true
       _ -> false
+    end
+  end
+
+  defp do_upload(%Mogrify.Image{} = image, key) do
+    saved_image = Mogrify.save(image)
+
+    with {:ok, image_io} <- File.read(saved_image.path),
+         {:ok, _} <- put_object_for(key, image_io) do
+      remove_temp_file(saved_image.path)
+
+      :ok
+    else
+      {:error, err} ->
+        remove_temp_file(saved_image.path)
+
+        {:error, err}
     end
   end
 

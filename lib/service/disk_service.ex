@@ -62,29 +62,27 @@ defmodule ActivestorageEx.DiskService do
     Saves an `%Image{}` to disk, as determined by a given `%Blob{}` or `%Variant{}` key
 
   ## Parameters
-    - `image`: A `%Mogrify.Image{}` that isn't persisted
+    - `image`: A `%Mogrify.Image{}` that isn't persisted _or_ a String.t() path to an image
     - `key`: The blob or variant's key.  File location will be based off this.
         Directories _will_ be created
   ## Examples
     Uploading an `%Image{}` to disk from a `%Blob{}` key
 
     ```
-      image = %Mogrify.Image{}
+      image = %Mogrify.Image{} | String.t()
       blob = %Blob{}
 
       DiskService.upload(image, blob.key) # %Mogrify.Image{}
     ```
   """
-  def upload(image, key) do
-    with :ok <- make_path_for(key) do
-      image
-      |> Mogrify.save()
-      |> rename_image(key)
+  def upload(%Mogrify.Image{} = image, key) do
+    do_upload(image, key)
+  end
 
-      :ok
-    else
-      {:error, err} -> {:error, err}
-    end
+  def upload(image_path, key) when is_binary(image_path) do
+    image_path
+    |> Mogrify.open()
+    |> do_upload(key)
   end
 
   @doc """
@@ -193,6 +191,18 @@ defmodule ActivestorageEx.DiskService do
     key
     |> path_for()
     |> File.exists?()
+  end
+
+  def do_upload(%Mogrify.Image{} = image, key) do
+    with :ok <- make_path_for(key) do
+      image
+      |> Mogrify.save()
+      |> rename_image(key)
+
+      :ok
+    else
+      {:error, err} -> {:error, err}
+    end
   end
 
   defp make_path_for(key) do
