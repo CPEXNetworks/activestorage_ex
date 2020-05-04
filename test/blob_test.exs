@@ -7,16 +7,9 @@ defmodule ActivestorageExTest.BlobTest do
 
   describe "compute_checksum!/1" do
     test "Computes checksum from filepath" do
-      result = Blob.compute_checksum!(@image_filepath)
+      known_checksum = "o0K/S+b6DobHNNfe6EGCKA=="
 
-      assert String.length(result) > 0
-    end
-
-    test "Computes same checksum each time" do
-      result_1 = Blob.compute_checksum!(@image_filepath)
-      result_2 = Blob.compute_checksum!(@image_filepath)
-
-      assert result_1 == result_2
+      assert ^known_checksum = Blob.compute_checksum!(@image_filepath)
     end
   end
 end
