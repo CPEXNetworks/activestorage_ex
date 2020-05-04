@@ -48,12 +48,24 @@ defmodule ActivestorageExTest.DiskServiceTest do
   end
 
   describe "DiskService.upload/2" do
-    test "An image is sucessfully saved to disk" do
+    test "A %Mogrify.Image{} is sucessfully saved to disk" do
       Application.put_env(:activestorage_ex, :root_path, "test/files")
       image = Mogrify.open("test/files/image.jpg")
       key = "test_key"
 
       DiskService.upload(image, key)
+
+      assert File.exists?(DiskService.path_for(key))
+
+      File.rm(DiskService.path_for(key))
+    end
+
+    test "An image is successfully saved to disk from string path" do
+      Application.put_env(:activestorage_ex, :root_path, "test/files")
+      image_path = "test/files/image.jpg"
+      key = "test_key"
+
+      DiskService.upload(image_path, key)
 
       assert File.exists?(DiskService.path_for(key))
 

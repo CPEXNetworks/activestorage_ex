@@ -50,10 +50,20 @@ defmodule ActivestorageExTest.S3ServiceTest do
   end
 
   describe "S3Service.upload/2" do
-    test "An image is sucessfully saved to s3" do
+    test "A %Mogrify.Image{} is sucessfully saved to s3" do
       image = Mogrify.open("test/files/image.jpg")
 
       S3Service.upload(image, @test_key)
+
+      assert S3Service.exist?(@test_key)
+
+      delete_test_image()
+    end
+
+    test "An image is sucessfully saved to s3 from string path" do
+      image_path = "test/files/image.jpg"
+
+      S3Service.upload(image_path, @test_key)
 
       assert S3Service.exist?(@test_key)
 
@@ -81,6 +91,14 @@ defmodule ActivestorageExTest.S3ServiceTest do
       S3Service.delete(@test_key)
 
       refute S3Service.exist?(@test_key)
+    end
+
+    test "No error is thrown if a file doesn't exist" do
+      key = "super_fake_test_key"
+
+      refute S3Service.exist?(key)
+
+      :ok = S3Service.delete(key)
     end
 
     test "An image with a complex path is sucessfully deleted from s3" do
